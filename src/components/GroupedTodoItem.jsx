@@ -1,7 +1,7 @@
 import React from 'react';
 import Tooltip from './Tooltip';
 
-const GroupedTodoItem = ({ groupName, items, onToggle }) => {
+const GroupedTodoItem = ({ groupName, items, onToggle, onDelete }) => {
   return (
     <div className="mb-6">
       {/* グループヘッダー */}
@@ -22,6 +22,9 @@ const GroupedTodoItem = ({ groupName, items, onToggle }) => {
               </Tooltip>
             )}
             <span className={`ml-2 px-2 py-0.5 rounded text-xs font-bold ${todo.importance === '高' ? 'bg-red-200 text-red-700' : todo.importance === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{todo.importance}</span>
+            <button onClick={() => onDelete(todo.id)} className="ml-3 text-red-500 hover:text-red-700">
+              <span role="img" aria-label="delete">🗑️</span>
+            </button>
           </li>
         ))}
       </ul>

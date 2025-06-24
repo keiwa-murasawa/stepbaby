@@ -81,6 +81,11 @@ function TodoList() {
     );
   };
 
+  // IDを元にタスクを削除する関数
+  const handleDeleteTodo = (id) => {
+    setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
+  };
+
   const grouped = groupByCategoryAndGroup(todos);
 
   return (
@@ -110,13 +115,16 @@ function TodoList() {
                       </Tooltip>
                     )}
                     <span className={`ml-2 px-2 py-0.5 rounded text-xs font-bold ${todo.importance === '高' ? 'bg-red-200 text-red-700' : todo.importance === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{todo.importance}</span>
+                    <button onClick={() => handleDeleteTodo(todo.id)} className="ml-3 text-red-500 hover:text-red-700">
+                      <span role="img" aria-label="delete">🗑️</span>
+                    </button>
                   </li>
                 ))}
               </ul>
 
               {/* グループ化されたToDo */}
               {Object.entries(data.grouped).map(([groupName, items]) => (
-                <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} />
+                <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} />
               ))}
             </div>
           ))
