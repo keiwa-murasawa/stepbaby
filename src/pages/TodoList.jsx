@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import todoData from "../data/todoData.json";
 import GroupedTodoItem from "../components/GroupedTodoItem";
 import Tooltip from "../components/Tooltip";
@@ -64,7 +64,7 @@ function TodoList() {
   const [selectedCategory, setSelectedCategory] = useState("その他");
 
   // 利用可能なカテゴリ一覧を動的に生成（メモ化して不要な再計算を防ぐ）
-  const availableCategories = React.useMemo(() => {
+  const availableCategories = useMemo(() => {
     const categories = new Set(todos.map(todo => todo.category));
     return ["その他", ...Array.from(categories)];
   }, [todos]);
@@ -82,11 +82,13 @@ function TodoList() {
       const storageKey = `papasapo-todos-${currentStage}`;
       const savedTodos = localStorage.getItem(storageKey);
       
+      const processTodos = (data) => data.map(todo => ({ ...todo, memo: todo.memo || '' }));
+
       if (savedTodos) {
-        setTodos(JSON.parse(savedTodos));
+        setTodos(processTodos(JSON.parse(savedTodos)));
       } else {
         const initialTodos = todoData.filter(todo => todo.stage === currentStage);
-        setTodos(initialTodos);
+        setTodos(processTodos(initialTodos));
       }
     } else {
       setTodos([]);
@@ -113,6 +115,7 @@ function TodoList() {
       task: newTask.trim(),
       importance: '中',
       done: false,
+      memo: '',
     };
 
     setTodos(prevTodos => [newTaskObject, ...prevTodos]);
@@ -140,6 +143,18 @@ function TodoList() {
       setTodos(prevTodos =>
         prevTodos.map(todo =>
           todo.id === id ? { ...todo, task: newTask.trim() } : todo
+        )
+      );
+    }
+  };
+
+  // メモ更新処理
+  const handleMemoUpdate = (id, currentMemo) => {
+    const newMemo = prompt("メモを編集:", currentMemo);
+    if (newMemo !== null) { // 空のメモも保存できるように
+      setTodos(prevTodos =>
+        prevTodos.map(todo =>
+          todo.id === id ? { ...todo, memo: newMemo.trim() } : todo
         )
       );
     }
@@ -198,6 +213,13 @@ function TodoList() {
                     >
                       {todo.task}
                     </span>
+                    <div 
+                      className="ml-4 text-sm text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
+                      onClick={() => handleMemoUpdate(todo.id, todo.memo)}
+                    >
+                      <span role="img" aria-label="memo">✏️</span>
+                      <span>{todo.memo || 'メモを追加'}</span>
+                    </div>
                     {todo.reason && (
                       <Tooltip text={todo.reason}>
                         <span role="img" aria-label="info" className="ml-2 cursor-pointer">ℹ️</span>
@@ -213,7 +235,7 @@ function TodoList() {
 
               {/* グループ化されたToDo */}
               {Object.entries(data.grouped).map(([groupName, items]) => (
-                <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} onUpdate={handleTaskUpdate} />
+                <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} onUpdate={handleTaskUpdate} onMemoUpdate={handleMemoUpdate} />
               ))}
             </div>
           ))

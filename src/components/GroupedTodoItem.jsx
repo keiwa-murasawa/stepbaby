@@ -1,7 +1,7 @@
 import React from 'react';
 import Tooltip from './Tooltip';
 
-const GroupedTodoItem = ({ groupName, items, onToggle, onDelete, onUpdate }) => {
+const GroupedTodoItem = ({ groupName, items, onToggle, onDelete, onUpdate, onMemoUpdate }) => {
   return (
     <div className="mb-6">
       {/* グループヘッダー */}
@@ -21,6 +21,13 @@ const GroupedTodoItem = ({ groupName, items, onToggle, onDelete, onUpdate }) => 
             >
               {todo.task}
             </span>
+            <div 
+              className="ml-4 text-sm text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
+              onClick={() => onMemoUpdate(todo.id, todo.memo)}
+            >
+              <span role="img" aria-label="memo">✏️</span>
+              <span>{todo.memo || 'メモを追加'}</span>
+            </div>
             {todo.reason && (
               <Tooltip text={todo.reason}>
                 <span role="img" aria-label="info" className="ml-2 cursor-pointer">ℹ️</span>
