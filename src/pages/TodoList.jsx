@@ -59,6 +59,7 @@ function groupByCategoryAndGroup(todos) {
 function TodoList() {
   const [stage, setStage] = useState("");
   const [nickname, setNickname] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [todos, setTodos] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("その他");
@@ -76,6 +77,7 @@ function TodoList() {
     const currentStage = determineStage(date);
     
     setNickname(nick || "");
+    setBirthDate(date || "");
     setStage(currentStage);
     
     if (currentStage) {
@@ -102,6 +104,37 @@ function TodoList() {
       localStorage.setItem(storageKey, JSON.stringify(todos));
     }
   }, [todos, stage]);
+
+  // 日付更新処理
+  const handleDateUpdate = (e) => {
+    const newDate = e.target.value;
+    setBirthDate(newDate); // stateを更新
+    localStorage.setItem('birthDate', newDate); // localStorageを更新
+  };
+
+  // birthDateが変更されたら、ステージとToDoリストを再計算する
+  useEffect(() => {
+    if (!birthDate) return;
+
+    const currentStage = determineStage(birthDate);
+    setStage(currentStage);
+
+    if (currentStage) {
+      const storageKey = `papasapo-todos-${currentStage}`;
+      const savedTodos = localStorage.getItem(storageKey);
+      
+      const processTodos = (data) => data.map(todo => ({ ...todo, memo: todo.memo || '' }));
+
+      if (savedTodos) {
+        setTodos(processTodos(JSON.parse(savedTodos)));
+      } else {
+        const initialTodos = todoData.filter(todo => todo.stage === currentStage);
+        setTodos(processTodos(initialTodos));
+      }
+    } else {
+      setTodos([]);
+    }
+  }, [birthDate]); // birthDateの変更を監視
 
   // タスク追加処理
   const handleAddTask = (e) => {
@@ -168,8 +201,20 @@ function TodoList() {
         <h2 className="text-xl font-bold text-emerald-700 mb-2 flex items-center gap-2">
           <span role="img" aria-label="checklist">📝</span> ToDo一覧
         </h2>
-        <div className="text-emerald-900 font-semibold mb-4">{nickname && `${nickname}さんのステージ：${stage}`}</div>
+        <div className="text-emerald-900 font-semibold mb-2">{nickname && `${nickname}さんのステージ：${stage}`}</div>
         
+        {/* 日付表示・編集エリア */}
+        <div className="text-sm text-gray-600 mb-4">
+          <label htmlFor="birthDate" className="font-semibold">出産予定日/誕生日: </label>
+          <input
+            type="date"
+            id="birthDate"
+            value={birthDate}
+            onChange={handleDateUpdate}
+            className="border-b-2 border-transparent focus:outline-none focus:border-emerald-400 transition-colors"
+          />
+        </div>
+
         {/* タスク追加フォーム */}
         <form onSubmit={handleAddTask} className="flex flex-col gap-2 mb-6">
           <div className="flex gap-2">
