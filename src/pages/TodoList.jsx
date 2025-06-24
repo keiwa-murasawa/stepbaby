@@ -192,7 +192,12 @@ function TodoList() {
                 {data.single.map(todo => (
                   <li key={todo.id} className="flex items-center bg-emerald-50 rounded-lg px-3 py-2 shadow-sm">
                     <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-5 h-5 accent-emerald-400 mr-3" />
-                    <span className="flex-1 text-base text-emerald-900 cursor-pointer hover:text-emerald-600" onClick={() => handleTaskUpdate(todo.id, todo.task)}>{todo.task}</span>
+                    <span 
+                      className={`flex-1 text-base cursor-pointer transition-colors ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900 hover:text-emerald-600'}`} 
+                      onClick={() => handleTaskUpdate(todo.id, todo.task)}
+                    >
+                      {todo.task}
+                    </span>
                     {todo.reason && (
                       <Tooltip text={todo.reason}>
                         <span role="img" aria-label="info" className="ml-2 cursor-pointer">ℹ️</span>
