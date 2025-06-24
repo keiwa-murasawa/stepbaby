@@ -92,7 +92,7 @@ function TodoList() {
   useEffect(() => {
     if (!displayedStage) return;
 
-    const storageKey = `papasapo-todos-${displayedStage}`;
+    const storageKey = `stepbaby-todos-${displayedStage}`;
     const savedTodos = localStorage.getItem(storageKey);
     const processTodos = (data) => data.map(todo => ({ ...todo, memo: todo.memo || '' }));
 
@@ -107,7 +107,7 @@ function TodoList() {
   // todos stateが変更されたらlocalStorageに保存
   useEffect(() => {
     if (displayedStage) {
-      const storageKey = `papasapo-todos-${displayedStage}`;
+      const storageKey = `stepbaby-todos-${displayedStage}`;
       localStorage.setItem(storageKey, JSON.stringify(todos));
     }
   }, [todos, displayedStage]);

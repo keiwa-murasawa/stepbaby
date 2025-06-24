@@ -28,7 +28,7 @@ function Home() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-6">
         <h1 className="text-2xl font-bold text-emerald-700 mb-6 flex items-center gap-2">
-          <span role="img" aria-label="leaf">🌱</span> パパサポ
+          <span role="img" aria-label="leaf">🌱</span> StepBaby
         </h1>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
