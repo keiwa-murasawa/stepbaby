@@ -61,6 +61,13 @@ function TodoList() {
   const [nickname, setNickname] = useState("");
   const [todos, setTodos] = useState([]);
   const [newTask, setNewTask] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("その他");
+
+  // 利用可能なカテゴリ一覧を動的に生成（メモ化して不要な再計算を防ぐ）
+  const availableCategories = React.useMemo(() => {
+    const categories = new Set(todos.map(todo => todo.category));
+    return ["その他", ...Array.from(categories)];
+  }, [todos]);
 
   // 初期データの読み込み（localStorage優先）
   useEffect(() => {
@@ -102,7 +109,7 @@ function TodoList() {
     const newTaskObject = {
       id: Date.now(),
       stage: stage,
-      category: 'その他',
+      category: selectedCategory,
       task: newTask.trim(),
       importance: '中',
       done: false,
@@ -149,17 +156,28 @@ function TodoList() {
         <div className="text-emerald-900 font-semibold mb-4">{nickname && `${nickname}さんのステージ：${stage}`}</div>
         
         {/* タスク追加フォーム */}
-        <form onSubmit={handleAddTask} className="flex gap-2 mb-6">
-          <input
-            type="text"
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            placeholder="新しいタスクを追加"
-            className="flex-grow border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 transition-colors"
-          />
-          <button type="submit" className="bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-emerald-300" disabled={!newTask.trim()}>
-            追加
-          </button>
+        <form onSubmit={handleAddTask} className="flex flex-col gap-2 mb-6">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              placeholder="新しいタスクを追加"
+              className="flex-grow border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 transition-colors"
+            />
+            <button type="submit" className="bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-emerald-300" disabled={!newTask.trim()}>
+              追加
+            </button>
+          </div>
+          <select 
+            value={selectedCategory} 
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 transition-colors"
+          >
+            {availableCategories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </form>
 
         {Object.keys(grouped).length === 0 ? (
