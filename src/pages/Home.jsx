@@ -21,7 +21,7 @@ function Home() {
     localStorage.setItem("nickname", nickname.trim());
     localStorage.setItem("birthDate", date);
     setError("");
-    navigate("/todos");
+    navigate("/todolist");
   };
 
   return (
