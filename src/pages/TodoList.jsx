@@ -3,6 +3,8 @@ import todoData from "../data/todoData.json";
 import GroupedTodoItem from "../components/GroupedTodoItem";
 import Tooltip from "../components/Tooltip";
 
+const ALL_STAGES = [...new Set(todoData.map(todo => todo.stage))];
+
 // ステージ判定関数
 function determineStage(dateString) {
   if (!dateString) return null;
@@ -57,7 +59,8 @@ function groupByCategoryAndGroup(todos) {
 }
 
 function TodoList() {
-  const [stage, setStage] = useState("");
+  const [currentActualStage, setCurrentActualStage] = useState(""); // 自動判定されたステージ
+  const [displayedStage, setDisplayedStage] = useState(""); // 表示中のステージ
   const [nickname, setNickname] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [todos, setTodos] = useState([]);
@@ -70,40 +73,44 @@ function TodoList() {
     return ["その他", ...Array.from(categories)];
   }, [todos]);
 
-  // 初期データの読み込み（localStorage優先）
+  // 初期データの読み込み
   useEffect(() => {
     const date = localStorage.getItem("birthDate");
     const nick = localStorage.getItem("nickname");
-    const currentStage = determineStage(date);
+    const actualStage = determineStage(date);
     
     setNickname(nick || "");
     setBirthDate(date || "");
-    setStage(currentStage);
-    
-    if (currentStage) {
-      const storageKey = `papasapo-todos-${currentStage}`;
-      const savedTodos = localStorage.getItem(storageKey);
-      
-      const processTodos = (data) => data.map(todo => ({ ...todo, memo: todo.memo || '' }));
-
-      if (savedTodos) {
-        setTodos(processTodos(JSON.parse(savedTodos)));
-      } else {
-        const initialTodos = todoData.filter(todo => todo.stage === currentStage);
-        setTodos(processTodos(initialTodos));
-      }
-    } else {
-      setTodos([]);
+    setCurrentActualStage(actualStage);
+    // 初回読み込み時は、表示ステージを現在のステージに設定
+    if (!displayedStage) {
+      setDisplayedStage(actualStage);
     }
-  }, []);
+  }, []); // 初回のみ実行
+
+  // 表示ステージが変更されたら、ToDoリストを更新
+  useEffect(() => {
+    if (!displayedStage) return;
+
+    const storageKey = `papasapo-todos-${displayedStage}`;
+    const savedTodos = localStorage.getItem(storageKey);
+    const processTodos = (data) => data.map(todo => ({ ...todo, memo: todo.memo || '' }));
+
+    if (savedTodos) {
+      setTodos(processTodos(JSON.parse(savedTodos)));
+    } else {
+      const initialTodos = todoData.filter(todo => todo.stage === displayedStage);
+      setTodos(processTodos(initialTodos));
+    }
+  }, [displayedStage]);
 
   // todos stateが変更されたらlocalStorageに保存
   useEffect(() => {
-    if (stage) {
-      const storageKey = `papasapo-todos-${stage}`;
+    if (displayedStage) {
+      const storageKey = `papasapo-todos-${displayedStage}`;
       localStorage.setItem(storageKey, JSON.stringify(todos));
     }
-  }, [todos, stage]);
+  }, [todos, displayedStage]);
 
   // 日付更新処理
   const handleDateUpdate = (e) => {
@@ -112,38 +119,21 @@ function TodoList() {
     localStorage.setItem('birthDate', newDate); // localStorageを更新
   };
 
-  // birthDateが変更されたら、ステージとToDoリストを再計算する
+  // birthDateが変更されたら、現在のステージと表示ステージを更新する
   useEffect(() => {
-    if (!birthDate) return;
-
-    const currentStage = determineStage(birthDate);
-    setStage(currentStage);
-
-    if (currentStage) {
-      const storageKey = `papasapo-todos-${currentStage}`;
-      const savedTodos = localStorage.getItem(storageKey);
-      
-      const processTodos = (data) => data.map(todo => ({ ...todo, memo: todo.memo || '' }));
-
-      if (savedTodos) {
-        setTodos(processTodos(JSON.parse(savedTodos)));
-      } else {
-        const initialTodos = todoData.filter(todo => todo.stage === currentStage);
-        setTodos(processTodos(initialTodos));
-      }
-    } else {
-      setTodos([]);
-    }
-  }, [birthDate]); // birthDateの変更を監視
+    const actualStage = determineStage(birthDate);
+    setCurrentActualStage(actualStage);
+    setDisplayedStage(actualStage);
+  }, [birthDate]);
 
   // タスク追加処理
   const handleAddTask = (e) => {
     e.preventDefault();
-    if (!newTask.trim() || !stage) return; // 空のタスクやステージがない場合は追加しない
+    if (!newTask.trim() || !displayedStage) return;
 
     const newTaskObject = {
       id: Date.now(),
-      stage: stage,
+      stage: displayedStage,
       category: selectedCategory,
       task: newTask.trim(),
       importance: '中',
@@ -197,11 +187,40 @@ function TodoList() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-emerald-50 px-4 py-8">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-6">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-md p-6">
         <h2 className="text-xl font-bold text-emerald-700 mb-2 flex items-center gap-2">
           <span role="img" aria-label="checklist">📝</span> ToDo一覧
         </h2>
-        <div className="text-emerald-900 font-semibold mb-2">{nickname && `${nickname}さんのステージ：${stage}`}</div>
+        
+        {/* ステージ選択タブ */}
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2 border-b-2 border-gray-200 pb-2 mb-2">
+            {ALL_STAGES.map(stageName => (
+              <button 
+                key={stageName}
+                onClick={() => setDisplayedStage(stageName)}
+                className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
+                  displayedStage === stageName
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-emerald-200'
+                }`}
+              >
+                {stageName}
+                {currentActualStage === stageName && <span className="text-xs ml-1">(現在)</span>}
+              </button>
+            ))}
+          </div>
+          {displayedStage !== currentActualStage && (
+            <button
+              onClick={() => setDisplayedStage(currentActualStage)}
+              className="text-sm text-emerald-600 hover:underline"
+            >
+              現在のステージに戻る
+            </button>
+          )}
+        </div>
+
+        <div className="text-emerald-900 font-semibold mb-2">{nickname && `${nickname}さんのステージ：${displayedStage}`}</div>
         
         {/* 日付表示・編集エリア */}
         <div className="text-sm text-gray-600 mb-4">
