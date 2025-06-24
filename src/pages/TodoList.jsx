@@ -72,6 +72,15 @@ function TodoList() {
     setTodos(filtered);
   }, []);
 
+  // IDを元にタスクの完了状態を切り替える関数
+  const handleToggleTodo = (id) => {
+    setTodos(prevTodos => 
+      prevTodos.map(todo => 
+        todo.id === id ? { ...todo, done: !todo.done } : todo
+      )
+    );
+  };
+
   const grouped = groupByCategoryAndGroup(todos);
 
   return (
@@ -93,7 +102,7 @@ function TodoList() {
               <ul className="space-y-2 mb-4">
                 {data.single.map(todo => (
                   <li key={todo.id} className="flex items-center bg-emerald-50 rounded-lg px-3 py-2 shadow-sm">
-                    <input type="checkbox" checked={todo.done} readOnly className="w-5 h-5 accent-emerald-400 mr-3" />
+                    <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-5 h-5 accent-emerald-400 mr-3" />
                     <span className="flex-1 text-base text-emerald-900">{todo.task}</span>
                     {todo.reason && (
                       <Tooltip text={todo.reason}>
@@ -107,7 +116,7 @@ function TodoList() {
 
               {/* グループ化されたToDo */}
               {Object.entries(data.grouped).map(([groupName, items]) => (
-                <GroupedTodoItem key={groupName} groupName={groupName} items={items} />
+                <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} />
               ))}
             </div>
           ))
