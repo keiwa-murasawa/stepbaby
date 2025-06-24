@@ -8,20 +8,32 @@ function determineStage(dateString) {
   if (!dateString) return null;
   const now = new Date();
   const inputDate = new Date(dateString);
-  const diffDays = Math.floor((now - inputDate) / (1000 * 60 * 60 * 24));
-  const diffWeeks = diffDays / 7;
-  if (diffDays < 0) {
-    return diffWeeks <= -22
-      ? "妊娠期前半（妊娠発覚～22週）"
-      : "妊娠期後半（23週～出産）";
-  } else if (diffDays <= 28) {
-    return "出産直後（新生児期：〜1ヶ月）";
-  } else if (diffDays <= 180) {
-    return "乳児前期";
-  } else if (diffDays <= 365) {
-    return "乳児中期";
+  const diffTime = now - inputDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffTime < 0) {
+    const diffWeeks = Math.floor(diffDays / 7);
+    // 妊娠週数は、出産予定日から逆算するため、マイナスで計算される
+    const weeksFromDue = 40 + diffWeeks; 
+
+    if (weeksFromDue < 23) {
+      return "妊娠期前半（妊娠発覚～22週）";
+    } else {
+      return "妊娠期後半（23週～出産）";
+    }
   } else {
-    return "保育園準備期";
+    // 1ヶ月を約30日として計算
+    if (diffDays <= 30) {
+      return "出産直後（新生児期：〜1ヶ月）";
+    } else if (diffDays <= 90) { // 1〜3ヶ月
+      return "乳児前期（1〜3ヶ月）";
+    } else if (diffDays <= 180) { // 3〜6ヶ月
+      return "乳児中期（3〜6ヶ月）";
+    } else if (diffDays <= 270) { // 6〜9ヶ月
+      return "離乳食準備期（6〜9ヶ月）";
+    } else { // 9ヶ月以降
+      return "保育園準備期（9ヶ月〜入園まで）";
+    }
   }
 }
 
