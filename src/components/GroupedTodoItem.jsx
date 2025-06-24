@@ -1,7 +1,7 @@
 import React from 'react';
 import Tooltip from './Tooltip';
 
-const GroupedTodoItem = ({ groupName, items, onToggle, onDelete }) => {
+const GroupedTodoItem = ({ groupName, items, onToggle, onDelete, onUpdate }) => {
   return (
     <div className="mb-6">
       {/* グループヘッダー */}
@@ -15,7 +15,7 @@ const GroupedTodoItem = ({ groupName, items, onToggle, onDelete }) => {
         {items.map(todo => (
           <li key={todo.id} className="flex items-center bg-emerald-50 rounded-lg px-3 py-2 shadow-sm">
             <input type="checkbox" checked={todo.done} onChange={() => onToggle(todo.id)} className="w-5 h-5 accent-emerald-400 mr-3" />
-            <span className="flex-1 text-base text-emerald-900">{todo.task}</span>
+            <span className="flex-1 text-base text-emerald-900 cursor-pointer hover:text-emerald-600" onClick={() => onUpdate(todo.id, todo.task)}>{todo.task}</span>
             {todo.reason && (
               <Tooltip text={todo.reason}>
                 <span role="img" aria-label="info" className="ml-2 cursor-pointer">ℹ️</span>

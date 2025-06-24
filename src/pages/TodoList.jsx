@@ -60,17 +60,57 @@ function TodoList() {
   const [stage, setStage] = useState("");
   const [nickname, setNickname] = useState("");
   const [todos, setTodos] = useState([]);
+  const [newTask, setNewTask] = useState("");
 
+  // 初期データの読み込み（localStorage優先）
   useEffect(() => {
     const date = localStorage.getItem("birthDate");
     const nick = localStorage.getItem("nickname");
-    setNickname(nick || "");
-    const st = determineStage(date);
-    setStage(st);
+    const currentStage = determineStage(date);
     
-    const filtered = todoData.filter(todo => todo.stage === st);
-    setTodos(filtered);
+    setNickname(nick || "");
+    setStage(currentStage);
+    
+    if (currentStage) {
+      const storageKey = `papasapo-todos-${currentStage}`;
+      const savedTodos = localStorage.getItem(storageKey);
+      
+      if (savedTodos) {
+        setTodos(JSON.parse(savedTodos));
+      } else {
+        const initialTodos = todoData.filter(todo => todo.stage === currentStage);
+        setTodos(initialTodos);
+      }
+    } else {
+      setTodos([]);
+    }
   }, []);
+
+  // todos stateが変更されたらlocalStorageに保存
+  useEffect(() => {
+    if (stage) {
+      const storageKey = `papasapo-todos-${stage}`;
+      localStorage.setItem(storageKey, JSON.stringify(todos));
+    }
+  }, [todos, stage]);
+
+  // タスク追加処理
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (!newTask.trim() || !stage) return; // 空のタスクやステージがない場合は追加しない
+
+    const newTaskObject = {
+      id: Date.now(),
+      stage: stage,
+      category: 'その他',
+      task: newTask.trim(),
+      importance: '中',
+      done: false,
+    };
+
+    setTodos(prevTodos => [newTaskObject, ...prevTodos]);
+    setNewTask(''); // 入力フォームをクリア
+  };
 
   // IDを元にタスクの完了状態を切り替える関数
   const handleToggleTodo = (id) => {
@@ -86,6 +126,18 @@ function TodoList() {
     setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
   };
 
+  // タスク更新処理（promptを使用）
+  const handleTaskUpdate = (id, currentTask) => {
+    const newTask = prompt("タスクを編集:", currentTask);
+    if (newTask !== null && newTask.trim() !== "") {
+      setTodos(prevTodos =>
+        prevTodos.map(todo =>
+          todo.id === id ? { ...todo, task: newTask.trim() } : todo
+        )
+      );
+    }
+  };
+
   const grouped = groupByCategoryAndGroup(todos);
 
   return (
@@ -94,8 +146,22 @@ function TodoList() {
         <h2 className="text-xl font-bold text-emerald-700 mb-2 flex items-center gap-2">
           <span role="img" aria-label="checklist">📝</span> ToDo一覧
         </h2>
-        <div className="text-emerald-900 font-semibold mb-2">{nickname && `${nickname}さんのステージ：${stage}`}</div>
+        <div className="text-emerald-900 font-semibold mb-4">{nickname && `${nickname}さんのステージ：${stage}`}</div>
         
+        {/* タスク追加フォーム */}
+        <form onSubmit={handleAddTask} className="flex gap-2 mb-6">
+          <input
+            type="text"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            placeholder="新しいタスクを追加"
+            className="flex-grow border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 transition-colors"
+          />
+          <button type="submit" className="bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-emerald-300" disabled={!newTask.trim()}>
+            追加
+          </button>
+        </form>
+
         {Object.keys(grouped).length === 0 ? (
           <div className="text-emerald-400">このステージのToDoはありません</div>
         ) : (
@@ -108,7 +174,7 @@ function TodoList() {
                 {data.single.map(todo => (
                   <li key={todo.id} className="flex items-center bg-emerald-50 rounded-lg px-3 py-2 shadow-sm">
                     <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-5 h-5 accent-emerald-400 mr-3" />
-                    <span className="flex-1 text-base text-emerald-900">{todo.task}</span>
+                    <span className="flex-1 text-base text-emerald-900 cursor-pointer hover:text-emerald-600" onClick={() => handleTaskUpdate(todo.id, todo.task)}>{todo.task}</span>
                     {todo.reason && (
                       <Tooltip text={todo.reason}>
                         <span role="img" aria-label="info" className="ml-2 cursor-pointer">ℹ️</span>
@@ -124,7 +190,7 @@ function TodoList() {
 
               {/* グループ化されたToDo */}
               {Object.entries(data.grouped).map(([groupName, items]) => (
-                <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} />
+                <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} onUpdate={handleTaskUpdate} />
               ))}
             </div>
           ))
