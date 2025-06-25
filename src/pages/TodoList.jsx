@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import todoData from "../data/todoData.json";
 import GroupedTodoItem from "../components/GroupedTodoItem";
 import Tooltip from "../components/Tooltip";
-import { CheckCircleIcon, PencilSquareIcon, TrashIcon, InformationCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, PencilSquareIcon, TrashIcon, InformationCircleIcon, PlusCircleIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 const ALL_STAGES = [...new Set(todoData.map(todo => todo.stage))];
 
@@ -67,6 +67,7 @@ function TodoList() {
   const [todos, setTodos] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("その他");
+  const [openCategories, setOpenCategories] = useState({});
 
   // 利用可能なカテゴリ一覧を動的に生成（メモ化して不要な再計算を防ぐ）
   const availableCategories = useMemo(() => {
@@ -198,6 +199,10 @@ function TodoList() {
 
   const grouped = groupByCategoryAndGroup(todos);
 
+  const toggleCategory = (category) => {
+    setOpenCategories(prev => ({ ...prev, [category]: !prev[category] }));
+  };
+
   return (
     <div className="min-h-screen bg-emerald-50 flex flex-col items-center">
       {/* ヘッダー */}
@@ -264,49 +269,65 @@ function TodoList() {
           ) : (
             Object.entries(grouped).map(([category, data]) => (
               <div key={category} className="mb-6">
-                <div className="text-emerald-500 font-bold mb-2 text-lg border-l-4 border-emerald-200 pl-3">{category}</div>
-                {/* 単体ToDo */}
-                <ul className="flex flex-col gap-4 mb-4">
-                  {data.single.map(todo => (
-                    <li key={todo.id} className="bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-3 border border-emerald-50">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-6 h-6 accent-emerald-400 flex-shrink-0" />
-                        <span 
-                          className={`text-lg font-medium cursor-pointer transition-colors break-words font-sans ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900 hover:text-emerald-600'}`} 
-                          onClick={() => handleTaskUpdate(todo.id, todo.task)}
-                        >
-                          {todo.task}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <div 
-                          className="text-base text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
-                          onClick={() => handleMemoUpdate(todo.id, todo.memo)}
-                        >
-                          {todo.memo ? (
-                            <PencilSquareIcon className="w-5 h-5" />
-                          ) : (
-                            <PencilSquareIcon className="w-5 h-5 opacity-50" />
-                          )}
-                          <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
-                        </div>
-                        {todo.reason && (
-                          <Tooltip text={todo.reason}>
-                            <InformationCircleIcon className="w-5 h-5 text-emerald-400 cursor-pointer" />
-                          </Tooltip>
-                        )}
-                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${todo.importance === '高' ? 'bg-red-200 text-red-700' : todo.importance === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{todo.importance}</span>
-                        <button onClick={() => handleDeleteTodo(todo.id)} className="text-red-400 hover:text-red-600">
-                          <TrashIcon className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                {/* グループ化されたToDo */}
-                {Object.entries(data.grouped).map(([groupName, items]) => (
-                  <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} onUpdate={handleTaskUpdate} onMemoUpdate={handleMemoUpdate} onToggleGroup={handleToggleGroup} />
-                ))}
+                <button
+                  className="w-full flex items-center justify-between text-emerald-500 font-bold mb-2 text-lg border-l-4 border-emerald-200 pl-3 pr-2 py-2 bg-white rounded-xl shadow-sm hover:bg-emerald-50 transition-colors"
+                  onClick={() => toggleCategory(category)}
+                  aria-expanded={!!openCategories[category]}
+                >
+                  <span>{category}</span>
+                  {openCategories[category] ? (
+                    <ChevronUpIcon className="w-6 h-6" />
+                  ) : (
+                    <ChevronDownIcon className="w-6 h-6" />
+                  )}
+                </button>
+                {/* アコーディオン展開部分 */}
+                {openCategories[category] && (
+                  <>
+                    {/* 単体ToDo */}
+                    <ul className="flex flex-col gap-4 mb-4">
+                      {data.single.map(todo => (
+                        <li key={todo.id} className="bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-3 border border-emerald-50">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-6 h-6 accent-emerald-400 flex-shrink-0" />
+                            <span 
+                              className={`text-lg font-medium cursor-pointer transition-colors break-words font-sans ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900 hover:text-emerald-600'}`} 
+                              onClick={() => handleTaskUpdate(todo.id, todo.task)}
+                            >
+                              {todo.task}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <div 
+                              className="text-base text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
+                              onClick={() => handleMemoUpdate(todo.id, todo.memo)}
+                            >
+                              {todo.memo ? (
+                                <PencilSquareIcon className="w-5 h-5" />
+                              ) : (
+                                <PencilSquareIcon className="w-5 h-5 opacity-50" />
+                              )}
+                              <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
+                            </div>
+                            {todo.reason && (
+                              <Tooltip text={todo.reason}>
+                                <InformationCircleIcon className="w-5 h-5 text-emerald-400 cursor-pointer" />
+                              </Tooltip>
+                            )}
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${todo.importance === '高' ? 'bg-red-200 text-red-700' : todo.importance === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{todo.importance}</span>
+                            <button onClick={() => handleDeleteTodo(todo.id)} className="text-red-400 hover:text-red-600">
+                              <TrashIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    {/* グループ化されたToDo */}
+                    {Object.entries(data.grouped).map(([groupName, items]) => (
+                      <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} onUpdate={handleTaskUpdate} onMemoUpdate={handleMemoUpdate} onToggleGroup={handleToggleGroup} />
+                    ))}
+                  </>
+                )}
               </div>
             ))
           )}
