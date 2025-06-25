@@ -194,12 +194,12 @@ function TodoList() {
         
         {/* ステージ選択タブ */}
         <div className="mb-4">
-          <div className="flex flex-wrap gap-2 border-b-2 border-gray-200 pb-2 mb-2">
+          <div className="flex gap-2 border-b-2 border-gray-200 pb-2 mb-2 overflow-x-auto">
             {ALL_STAGES.map(stageName => (
               <button 
                 key={stageName}
                 onClick={() => setDisplayedStage(stageName)}
-                className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
+                className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors whitespace-nowrap flex-shrink-0 ${
                   displayedStage === stageName
                     ? 'bg-emerald-500 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-emerald-200'
@@ -236,7 +236,7 @@ function TodoList() {
 
         {/* タスク追加フォーム */}
         <form onSubmit={handleAddTask} className="flex flex-col gap-2 mb-6">
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={newTask}
@@ -244,7 +244,7 @@ function TodoList() {
               placeholder="新しいタスクを追加"
               className="flex-grow border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 transition-colors"
             />
-            <button type="submit" className="bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-emerald-300" disabled={!newTask.trim()}>
+            <button type="submit" className="bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-emerald-300 whitespace-nowrap" disabled={!newTask.trim()}>
               追加
             </button>
           </div>
@@ -269,30 +269,35 @@ function TodoList() {
               {/* 単体ToDo */}
               <ul className="space-y-2 mb-4">
                 {data.single.map(todo => (
-                  <li key={todo.id} className="flex items-center bg-emerald-50 rounded-lg px-3 py-2 shadow-sm">
-                    <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-5 h-5 accent-emerald-400 mr-3" />
-                    <span 
-                      className={`flex-1 text-base cursor-pointer transition-colors ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900 hover:text-emerald-600'}`} 
-                      onClick={() => handleTaskUpdate(todo.id, todo.task)}
-                    >
-                      {todo.task}
-                    </span>
-                    <div 
-                      className="ml-4 text-sm text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
-                      onClick={() => handleMemoUpdate(todo.id, todo.memo)}
-                    >
-                      <span role="img" aria-label="memo">✏️</span>
-                      <span>{todo.memo || 'メモを追加'}</span>
+                  <li key={todo.id} className="flex flex-col sm:flex-row sm:items-center bg-emerald-50 rounded-lg px-3 py-2 shadow-sm gap-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-5 h-5 accent-emerald-400 flex-shrink-0" />
+                      <span 
+                        className={`text-base cursor-pointer transition-colors break-words ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900 hover:text-emerald-600'}`} 
+                        onClick={() => handleTaskUpdate(todo.id, todo.task)}
+                      >
+                        {todo.task}
+                      </span>
                     </div>
-                    {todo.reason && (
-                      <Tooltip text={todo.reason}>
-                        <span role="img" aria-label="info" className="ml-2 cursor-pointer">ℹ️</span>
-                      </Tooltip>
-                    )}
-                    <span className={`ml-2 px-2 py-0.5 rounded text-xs font-bold ${todo.importance === '高' ? 'bg-red-200 text-red-700' : todo.importance === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{todo.importance}</span>
-                    <button onClick={() => handleDeleteTodo(todo.id)} className="ml-3 text-red-500 hover:text-red-700">
-                      <span role="img" aria-label="delete">🗑️</span>
-                    </button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div 
+                        className="text-sm text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
+                        onClick={() => handleMemoUpdate(todo.id, todo.memo)}
+                      >
+                        <span role="img" aria-label="memo">✏️</span>
+                        <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
+                        <span className="sm:hidden">{todo.memo ? '📝' : '✏️'}</span>
+                      </div>
+                      {todo.reason && (
+                        <Tooltip text={todo.reason}>
+                          <span role="img" aria-label="info" className="cursor-pointer">ℹ️</span>
+                        </Tooltip>
+                      )}
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${todo.importance === '高' ? 'bg-red-200 text-red-700' : todo.importance === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{todo.importance}</span>
+                      <button onClick={() => handleDeleteTodo(todo.id)} className="text-red-500 hover:text-red-700">
+                        <span role="img" aria-label="delete">🗑️</span>
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
