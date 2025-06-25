@@ -1,12 +1,20 @@
 import React from 'react';
 import Tooltip from './Tooltip';
 
-const GroupedTodoItem = ({ groupName, items, onToggle, onDelete, onUpdate, onMemoUpdate }) => {
+const GroupedTodoItem = ({ groupName, items, onToggle, onDelete, onUpdate, onMemoUpdate, onToggleGroup }) => {
+  // グループ全体が完了済みかどうか
+  const allDone = items.length > 0 && items.every(todo => todo.done);
+
   return (
     <div className="mb-6">
       {/* グループヘッダー */}
       <div className="flex items-center mb-3">
-        <input type="checkbox" className="w-5 h-5 accent-emerald-400 mr-3" />
+        <input
+          type="checkbox"
+          className="w-5 h-5 accent-emerald-400 mr-3"
+          checked={allDone}
+          onChange={() => onToggleGroup(items)}
+        />
         <h3 className="text-lg font-bold text-emerald-600">{groupName}</h3>
       </div>
       
@@ -28,9 +36,13 @@ const GroupedTodoItem = ({ groupName, items, onToggle, onDelete, onUpdate, onMem
                 className="text-sm text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
                 onClick={() => onMemoUpdate(todo.id, todo.memo)}
               >
-                <span role="img" aria-label="memo">✏️</span>
+                {/* スマホ・PCで1つだけ鉛筆/メモアイコンが出るように修正 */}
+                {todo.memo ? (
+                  <span>{window.innerWidth < 640 ? '📝' : '✏️'}</span>
+                ) : (
+                  <span>✏️</span>
+                )}
                 <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
-                <span className="sm:hidden">{todo.memo ? '📝' : '✏️'}</span>
               </div>
               {todo.reason && (
                 <Tooltip text={todo.reason}>

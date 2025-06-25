@@ -183,6 +183,18 @@ function TodoList() {
     }
   };
 
+  // グループ一括トグル
+  const handleToggleGroup = (groupItems) => {
+    const allDone = groupItems.every(todo => todo.done);
+    setTodos(prevTodos =>
+      prevTodos.map(todo =>
+        groupItems.some(g => g.id === todo.id)
+          ? { ...todo, done: !allDone }
+          : todo
+      )
+    );
+  };
+
   const grouped = groupByCategoryAndGroup(todos);
 
   return (
@@ -304,7 +316,7 @@ function TodoList() {
 
               {/* グループ化されたToDo */}
               {Object.entries(data.grouped).map(([groupName, items]) => (
-                <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} onUpdate={handleTaskUpdate} onMemoUpdate={handleMemoUpdate} />
+                <GroupedTodoItem key={groupName} groupName={groupName} items={items} onToggle={handleToggleTodo} onDelete={handleDeleteTodo} onUpdate={handleTaskUpdate} onMemoUpdate={handleMemoUpdate} onToggleGroup={handleToggleGroup} />
               ))}
             </div>
           ))
