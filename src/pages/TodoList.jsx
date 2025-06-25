@@ -296,9 +296,13 @@ function TodoList() {
                         className="text-sm text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
                         onClick={() => handleMemoUpdate(todo.id, todo.memo)}
                       >
-                        <span role="img" aria-label="memo">✏️</span>
+                        {/* スマホ・PCで1つだけ鉛筆/メモアイコンが出るように修正 */}
+                        {todo.memo ? (
+                          <span>{window.innerWidth < 640 ? '📝' : '✏️'}</span>
+                        ) : (
+                          <span>✏️</span>
+                        )}
                         <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
-                        <span className="sm:hidden">{todo.memo ? '📝' : '✏️'}</span>
                       </div>
                       {todo.reason && (
                         <Tooltip text={todo.reason}>
