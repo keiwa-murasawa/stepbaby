@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { db } from "../firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 function Home() {
   const [nickname, setNickname] = useState("");
@@ -22,6 +24,19 @@ function Home() {
     localStorage.setItem("birthDate", date);
     setError("");
     navigate("/todolist");
+  };
+
+  const handleCreateCloudList = async () => {
+    const newListId = crypto.randomUUID();
+    // 必要に応じて初期データをここで定義
+    const initialData = {
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      title: "新しいToDoリスト",
+      todos: []
+    };
+    await setDoc(doc(db, "lists", newListId), initialData);
+    navigate(`/list/${newListId}`);
   };
 
   return (
@@ -53,6 +68,12 @@ function Home() {
           {error && <div className="text-red-500 text-sm font-bold">{error}</div>}
           <button type="submit" className="w-full bg-emerald-400 hover:bg-emerald-500 text-white font-bold rounded-md px-4 py-2 transition-colors mt-4">はじめる</button>
         </form>
+        <button
+          onClick={handleCreateCloudList}
+          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-md px-4 py-3 mt-8 text-lg shadow transition-colors"
+        >
+          新しいクラウドToDoリストを作成（共有URLを発行します）
+        </button>
       </div>
     </div>
   );
