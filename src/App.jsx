@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import Home from "./pages/Home";
 import TodoList from "./pages/TodoList";
+import TodoListCloud from "./pages/TodoListCloud";
 
 /**
  * アプリの初回アクセス時に、localStorageにデータがあるかチェックし、
@@ -35,6 +36,7 @@ function App() {
         <Route path="/" element={<InitialRouteHandler />} />
         <Route path="/home" element={<Home />} />
         <Route path="/todolist" element={<TodoList />} />
+        <Route path="/list/:id" element={<TodoListCloud />} />
       </Routes>
     </BrowserRouter>
   );

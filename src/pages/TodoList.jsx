@@ -3,6 +3,9 @@ import todoData from "../data/todoData.json";
 import GroupedTodoItem from "../components/GroupedTodoItem";
 import Tooltip from "../components/Tooltip";
 import { CheckCircleIcon, PencilSquareIcon, TrashIcon, InformationCircleIcon, PlusCircleIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useParams } from 'react-router-dom';
 
 const ALL_STAGES = [...new Set(todoData.map(todo => todo.stage))];
 
@@ -68,6 +71,7 @@ function TodoList() {
   const [newTask, setNewTask] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("その他");
   const [openCategories, setOpenCategories] = useState({});
+  const { id } = useParams();
 
   // 利用可能なカテゴリ一覧を動的に生成（メモ化して不要な再計算を防ぐ）
   const availableCategories = useMemo(() => {
@@ -148,12 +152,21 @@ function TodoList() {
   };
 
   // IDを元にタスクの完了状態を切り替える関数
-  const handleToggleTodo = (id) => {
-    setTodos(prevTodos => 
-      prevTodos.map(todo => 
+  const handleToggleTodo = async (id) => {
+    try {
+      const updatedTodos = todos.map(todo =>
         todo.id === id ? { ...todo, done: !todo.done } : todo
-      )
-    );
+      );
+      const docRef = doc(db, "lists", id);
+      await updateDoc(docRef, {
+        todos: updatedTodos,
+        updatedAt: new Date().toISOString()
+      });
+      setTodos(updatedTodos);
+    } catch (e) {
+      alert('Firestore書き込みエラー: ' + e.message);
+      console.error(e);
+    }
   };
 
   // IDを元にタスクを削除する関数
