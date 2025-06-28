@@ -50,9 +50,6 @@ function Home() {
       <main className="w-full max-w-4xl mx-auto px-2 sm:px-4 flex flex-col items-center justify-center flex-1">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
           <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg p-8 mx-auto">
-            <div className="flex justify-center mb-6">
-              <img src="/hajimeni.png" alt="はじめに" className="h-16 object-contain" />
-            </div>
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label className="block text-emerald-900 font-semibold mb-1">ニックネーム</label>
@@ -74,7 +71,7 @@ function Home() {
                 />
               </div>
               {error && <div className="text-red-500 text-sm font-bold">{error}</div>}
-              <button type="submit" className="w-full aspect-[5/1] mt-4 overflow-hidden p-0 bg-transparent rounded-xl flex items-center justify-center">
+              <button type="submit" className="w-full max-w-[10rem] aspect-[4/1] h-12 mt-4 overflow-hidden p-0 bg-transparent rounded-full flex items-center justify-center mx-auto">
                 <img src="/hajimeru.png" alt="はじめる" className="w-full h-full object-contain" />
               </button>
             </form>
