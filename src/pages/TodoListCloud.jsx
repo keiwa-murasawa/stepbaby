@@ -4,7 +4,7 @@ import { db } from "../firebase";
 import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
 import { useState as useReactState } from "react";
 import Tooltip from "../components/Tooltip";
-import { PencilSquareIcon, InformationCircleIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, InformationCircleIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon, ShareIcon } from '@heroicons/react/24/outline';
 import todoData from "../data/todoData.json";
 
 // ステージ判定関数
@@ -66,6 +66,8 @@ function TodoListCloud() {
   // ステージ切り替え用
   const ALL_STAGES = [...new Set(todoData.map(todo => todo.stage))];
   const [displayedStage, setDisplayedStage] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("その他");
+  const [selectedGroup, setSelectedGroup] = useState("");
 
   useEffect(() => {
     if (!listId) return;
@@ -98,58 +100,161 @@ function TodoListCloud() {
     setOpenCategories(prev => ({ ...prev, [category]: !prev[category] }));
   };
 
+  // 利用可能なカテゴリ一覧を動的に生成
+  const availableCategories = React.useMemo(() => {
+    const categories = new Set(stageTodos.map(todo => todo.category));
+    return ["その他", ...Array.from(categories)];
+  }, [stageTodos]);
+
+  // 利用可能なグループ一覧を動的に生成
+  const availableGroups = React.useMemo(() => {
+    const groups = new Set(stageTodos.map(todo => todo.group).filter(Boolean));
+    return ["", ...Array.from(groups)];
+  }, [stageTodos]);
+
+  // 選択されたカテゴリに応じてグループをフィルタリング
+  const filteredGroups = React.useMemo(() => {
+    if (selectedCategory === "その他") return [];
+    const categoryGroups = new Set(
+      stageTodos
+        .filter(todo => todo.category === selectedCategory && todo.group)
+        .map(todo => todo.group)
+    );
+    return ["", ...Array.from(categoryGroups)];
+  }, [selectedCategory, stageTodos]);
+
   // タスク追加処理
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTask.trim()) return;
-    const newTodo = {
-      id: crypto.randomUUID(),
-      task: newTask.trim(),
-      done: false,
-      memo: ""
-    };
-    const docRef = doc(db, "lists", listId);
-    await updateDoc(docRef, {
-      todos: [...(listData.todos || []), newTodo],
-      updatedAt: new Date().toISOString()
-    });
-    setNewTask("");
+    try {
+      const newTodo = {
+        id: crypto.randomUUID(),
+        task: newTask.trim(),
+        done: false,
+        memo: "",
+        category: selectedCategory,
+        stage: displayedStage,
+        importance: "中",
+        group: selectedGroup || undefined, // 空文字列の場合はundefinedにする
+      };
+      const docRef = doc(db, "lists", listId);
+      await updateDoc(docRef, {
+        todos: [...(listData.todos || []), newTodo],
+        updatedAt: new Date().toISOString()
+      });
+      setNewTask("");
+      setSelectedGroup(""); // グループ選択をリセット
+    } catch (e) {
+      alert('Firestore書き込みエラー: ' + e.message);
+      console.error(e);
+    }
   };
 
   // タスク完了切り替え
   const handleToggleTodo = async (taskId) => {
-    const updatedTodos = listData.todos.map(todo =>
-      todo.id === taskId ? { ...todo, done: !todo.done } : todo
-    );
-    const docRef = doc(db, "lists", listId);
-    await updateDoc(docRef, {
-      todos: updatedTodos,
-      updatedAt: new Date().toISOString()
-    });
-  };
-
-  // タスク削除
-  const handleDeleteTodo = async (taskId) => {
-    const updatedTodos = listData.todos.filter(todo => todo.id !== taskId);
-    const docRef = doc(db, "lists", listId);
-    await updateDoc(docRef, {
-      todos: updatedTodos,
-      updatedAt: new Date().toISOString()
-    });
-  };
-
-  // タスク編集
-  const handleEditTodo = async (taskId, currentTask) => {
-    const newTask = prompt("タスクを編集:", currentTask);
-    if (newTask !== null && newTask.trim() !== "") {
+    try {
       const updatedTodos = listData.todos.map(todo =>
-        todo.id === taskId ? { ...todo, task: newTask.trim() } : todo
+        todo.id === taskId ? { ...todo, done: !todo.done } : todo
       );
       const docRef = doc(db, "lists", listId);
       await updateDoc(docRef, {
         todos: updatedTodos,
         updatedAt: new Date().toISOString()
       });
+    } catch (e) {
+      alert('Firestore書き込みエラー: ' + e.message);
+      console.error(e);
+    }
+  };
+
+  // タスク削除
+  const handleDeleteTodo = async (taskId) => {
+    try {
+      const updatedTodos = listData.todos.filter(todo => todo.id !== taskId);
+      const docRef = doc(db, "lists", listId);
+      await updateDoc(docRef, {
+        todos: updatedTodos,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (e) {
+      alert('Firestore書き込みエラー: ' + e.message);
+      console.error(e);
+    }
+  };
+
+  // タスク編集
+  const handleEditTodo = async (taskId, currentTask) => {
+    const newTask = prompt("タスクを編集:", currentTask);
+    if (newTask !== null && newTask.trim() !== "") {
+      try {
+        const updatedTodos = listData.todos.map(todo =>
+          todo.id === taskId ? { ...todo, task: newTask.trim() } : todo
+        );
+        const docRef = doc(db, "lists", listId);
+        await updateDoc(docRef, {
+          todos: updatedTodos,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (e) {
+        alert('Firestore書き込みエラー: ' + e.message);
+        console.error(e);
+      }
+    }
+  };
+
+  // メモ編集
+  const handleEditMemo = async (taskId, currentMemo) => {
+    const newMemo = prompt("メモを編集:", currentMemo);
+    if (newMemo !== null) { // 空のメモも保存できるように
+      try {
+        const updatedTodos = listData.todos.map(todo =>
+          todo.id === taskId ? { ...todo, memo: newMemo.trim() } : todo
+        );
+        const docRef = doc(db, "lists", listId);
+        await updateDoc(docRef, {
+          todos: updatedTodos,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (e) {
+        alert('Firestore書き込みエラー: ' + e.message);
+        console.error(e);
+      }
+    }
+  };
+
+  // 共有ボタン機能
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/list/${listId}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      // フォールバック: 古いブラウザ対応
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // 出生予定日変更機能
+  const handleDateChange = async (e) => {
+    const newDate = e.target.value;
+    try {
+      const docRef = doc(db, "lists", listId);
+      await updateDoc(docRef, {
+        birthDate: newDate,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (e) {
+      alert('Firestore書き込みエラー: ' + e.message);
+      console.error(e);
     }
   };
 
@@ -162,13 +267,29 @@ function TodoListCloud() {
         className="w-full h-40 bg-center bg-no-repeat bg-contain mb-6 bg-white"
         style={{ backgroundImage: "url('/header-logo.png')" }}
       ></header>
-      <main className="w-full max-w-4xl px-2 sm:px-4 flex flex-col gap-8">
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
-          <div className="text-lg font-bold text-emerald-700 mb-2">{listData.title}</div>
-          <div className="text-sm text-gray-500 break-all mb-2">リストID: {listId}</div>
+      <main className="w-full flex flex-col gap-8">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 w-full">
+          <div className="flex items-center justify-between gap-4 w-full">
+            <div className="flex-1">
+              <label className="block text-sm text-gray-600 mb-1">出産予定日 または 赤ちゃんの生年月日</label>
+              <input
+                type="date"
+                value={listData.birthDate || ''}
+                onChange={handleDateChange}
+                className="border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 text-sm"
+              />
+            </div>
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 bg-emerald-400 hover:bg-emerald-500 text-white font-bold rounded-lg px-4 py-2 text-sm shadow transition-colors"
+            >
+              <ShareIcon className="w-4 h-4" />
+              {copied ? 'コピーしました！' : '共有'}
+            </button>
+          </div>
         </div>
         {/* タスクリスト表示（今は雛形） */}
-        <div className="bg-white rounded-xl shadow p-6">
+        <div className="bg-white rounded-xl shadow p-6 w-full">
           {/* ステージ切り替えタブ */}
           <div className="mb-2">
             <div className="flex gap-2 border-b-2 border-gray-200 pb-2 mb-2 overflow-x-auto">
@@ -205,6 +326,28 @@ function TodoListCloud() {
               placeholder="新しいタスクを追加"
               className="flex-grow border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400"
             />
+            <select
+              value={selectedCategory}
+              onChange={e => {
+                setSelectedCategory(e.target.value);
+                setSelectedGroup(""); // カテゴリ変更時にグループをリセット
+              }}
+              className="border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 text-base font-sans"
+            >
+              {availableCategories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            <select
+              value={selectedGroup}
+              onChange={e => setSelectedGroup(e.target.value)}
+              className="border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 text-base font-sans"
+            >
+              <option value="">グループなし</option>
+              {filteredGroups.filter(group => group !== "").map(group => (
+                <option key={group} value={group}>{group}</option>
+              ))}
+            </select>
             <button type="submit" className="bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-emerald-300" disabled={!newTask.trim()}>
               追加
             </button>
@@ -246,7 +389,7 @@ function TodoListCloud() {
                             <div className="flex items-center gap-3 flex-wrap">
                               <div 
                                 className="text-base text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
-                                onClick={() => handleEditTodo(todo.id, todo.memo)}
+                                onClick={() => handleEditMemo(todo.id, todo.memo)}
                               >
                                 <PencilSquareIcon className="w-5 h-5" />
                                 <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
@@ -283,7 +426,7 @@ function TodoListCloud() {
                                 <div className="flex items-center gap-3 flex-wrap">
                                   <div 
                                     className="text-base text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
-                                    onClick={() => handleEditTodo(todo.id, todo.memo)}
+                                    onClick={() => handleEditMemo(todo.id, todo.memo)}
                                   >
                                     <PencilSquareIcon className="w-5 h-5" />
                                     <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
