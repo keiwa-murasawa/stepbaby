@@ -267,8 +267,8 @@ function TodoListCloud() {
         className="w-full h-40 bg-center bg-no-repeat bg-contain mb-6 bg-white"
         style={{ backgroundImage: "url('/header-logo.png')" }}
       ></header>
-      <main className="w-full max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl mx-auto flex flex-col gap-8">
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 w-full">
+      <main className="w-full max-w-4xl mx-auto flex flex-col gap-8 items-center">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 w-full max-w-lg mx-auto">
           <div className="flex items-center justify-between gap-4 w-full">
             <div className="flex-1">
               <label className="block text-sm text-gray-600 mb-1">出産予定日 または 赤ちゃんの生年月日</label>

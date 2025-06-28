@@ -12,21 +12,13 @@ const InitialRouteHandler = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    // localStorageからlistIdと出産予定日を取得
     const savedListId = localStorage.getItem("listId");
-    const savedDate = localStorage.getItem("birthDate");
-    
     if (savedListId) {
-      // listIdがあればクラウドリスト画面へ
       navigate(`/list/${savedListId}`);
-    } else if (savedDate) {
-      // birthDateのみあればローカルToDoリストへ
-      navigate('/todolist');
     } else {
-      // どちらもなければ情報入力ページへ
       navigate('/home');
     }
-  }, [navigate]); // navigateを依存配列に追加
+  }, [navigate]);
 
   // このコンポーネント自体は何もレンダリングしない
   return null; 

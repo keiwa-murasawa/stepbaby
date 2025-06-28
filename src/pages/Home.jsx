@@ -47,36 +47,38 @@ function Home() {
         className="w-full h-40 bg-center bg-no-repeat bg-contain mb-6 bg-white"
         style={{ backgroundImage: "url('/header-logo.png')" }}
       ></header>
-      <main className="w-full max-w-4xl px-2 sm:px-4 flex flex-col items-center justify-center flex-1">
+      <main className="w-full max-w-4xl mx-auto px-2 sm:px-4 flex flex-col items-center justify-center flex-1">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-          <div className="flex justify-center mb-6">
-            <img src="/hajimeni.png" alt="はじめに" className="h-16 object-contain" />
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-lg p-8 mx-auto">
+            <div className="flex justify-center mb-6">
+              <img src="/hajimeni.png" alt="はじめに" className="h-16 object-contain" />
+            </div>
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label className="block text-emerald-900 font-semibold mb-1">ニックネーム</label>
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={e => setNickname(e.target.value)}
+                  className="w-full border-2 border-emerald-200 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-400 text-lg font-sans"
+                  placeholder="赤ちゃんのニックネーム"
+                />
+              </div>
+              <div>
+                <label className="block text-emerald-900 font-semibold mb-1">出産予定日 または 赤ちゃんの生年月日</label>
+                <input
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="w-full border-2 border-emerald-200 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-400 text-lg font-sans"
+                />
+              </div>
+              {error && <div className="text-red-500 text-sm font-bold">{error}</div>}
+              <button type="submit" className="w-full flex justify-center mt-4">
+                <img src="/hajimeru.png" alt="はじめる" className="h-12 object-contain" />
+              </button>
+            </form>
           </div>
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-emerald-900 font-semibold mb-1">ニックネーム</label>
-              <input
-                type="text"
-                value={nickname}
-                onChange={e => setNickname(e.target.value)}
-                className="w-full border-2 border-emerald-200 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-400 text-lg font-sans"
-                placeholder="赤ちゃんのニックネーム"
-              />
-            </div>
-            <div>
-              <label className="block text-emerald-900 font-semibold mb-1">出産予定日 または 赤ちゃんの生年月日</label>
-              <input
-                type="date"
-                value={date}
-                onChange={e => setDate(e.target.value)}
-                className="w-full border-2 border-emerald-200 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-400 text-lg font-sans"
-              />
-            </div>
-            {error && <div className="text-red-500 text-sm font-bold">{error}</div>}
-            <button type="submit" className="w-full flex justify-center mt-4">
-              <img src="/hajimeru.png" alt="はじめる" className="h-12 object-contain" />
-            </button>
-          </form>
         </div>
       </main>
     </div>
