@@ -267,7 +267,7 @@ function TodoListCloud() {
         className="w-full h-40 bg-center bg-no-repeat bg-contain mb-6 bg-white"
         style={{ backgroundImage: "url('/header-logo.png')" }}
       ></header>
-      <main className="w-full flex flex-col gap-8">
+      <main className="w-full max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl mx-auto flex flex-col gap-8">
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 w-full">
           <div className="flex items-center justify-between gap-4 w-full">
             <div className="flex-1">
@@ -291,8 +291,8 @@ function TodoListCloud() {
         {/* タスクリスト表示（今は雛形） */}
         <div className="bg-white rounded-xl shadow p-6 w-full">
           {/* ステージ切り替えタブ */}
-          <div className="mb-2">
-            <div className="flex gap-2 border-b-2 border-gray-200 pb-2 mb-2 overflow-x-auto">
+          <div className="mb-2 w-full">
+            <div className="flex flex-wrap gap-2 border-b-2 border-gray-200 pb-2 mb-2 w-full">
               {ALL_STAGES.map(stageName => (
                 <button 
                   key={stageName}
@@ -359,7 +359,8 @@ function TodoListCloud() {
               Object.entries(grouped).map(([category, data]) => (
                 <div key={category} className="mb-6">
                   <button
-                    className="w-full flex items-center justify-between text-emerald-500 font-bold mb-2 text-lg border-l-4 border-emerald-200 pl-3 pr-2 py-2 bg-white rounded-xl shadow-sm hover:bg-emerald-50 transition-colors"
+                    className="w-full max-w-lg flex items-center justify-between text-emerald-500 font-bold mb-2 text-lg border-l-4 border-emerald-200 pl-3 pr-2 py-2 bg-white rounded-xl shadow-sm hover:bg-emerald-50 transition-colors"
+                    style={{marginLeft: 0, marginRight: 'auto'}}
                     onClick={() => toggleCategory(category)}
                     aria-expanded={!!openCategories[category]}
                   >
@@ -376,7 +377,7 @@ function TodoListCloud() {
                       {/* 単体ToDo */}
                       <ul className="flex flex-col gap-4 mb-4">
                         {data.single.map(todo => (
-                          <li key={todo.id} className="bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-3 border border-emerald-50">
+                          <li key={todo.id} className="bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-3 border border-emerald-50 w-full max-w-lg">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-6 h-6 accent-emerald-400 flex-shrink-0" />
                               <span 
@@ -410,10 +411,10 @@ function TodoListCloud() {
                       {/* グループ化されたToDo */}
                       {Object.entries(data.grouped).map(([groupName, items]) => (
                         <div key={groupName} className="mb-4">
-                          <div className="font-bold text-emerald-600 mb-2">{groupName}</div>
+                          <div className="font-bold text-emerald-600 mb-2 pl-2">{groupName}</div>
                           <ul className="flex flex-col gap-2 pl-4 sm:pl-8">
                             {items.map(todo => (
-                              <li key={todo.id} className="bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-3 border border-emerald-50">
+                              <li key={todo.id} className="bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-3 border border-emerald-50 w-full max-w-lg">
                                 <div className="flex items-center gap-3 flex-1 min-w-0">
                                   <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-6 h-6 accent-emerald-400 flex-shrink-0" />
                                   <span 
