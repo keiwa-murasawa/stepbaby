@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import todoData from "../data/todoData.json";
 import GroupedTodoItem from "../components/GroupedTodoItem";
 import Tooltip from "../components/Tooltip";
-import { CheckCircleIcon, PencilSquareIcon, TrashIcon, InformationCircleIcon, PlusCircleIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, PencilSquareIcon, TrashIcon, InformationCircleIcon, PlusCircleIcon, ChevronDownIcon, ChevronUpIcon, PencilIcon } from '@heroicons/react/24/outline';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useParams } from 'react-router-dom';
@@ -300,34 +300,40 @@ function TodoList() {
                       {data.single.map(todo => (
                         <li key={todo.id} className="bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-3 border border-emerald-50">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-6 h-6 accent-emerald-400 flex-shrink-0" />
+                            <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-7 h-7 accent-emerald-400 flex-shrink-0" />
                             <span 
-                              className={`text-lg font-medium cursor-pointer transition-colors break-words font-sans ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900 hover:text-emerald-600'}`} 
-                              onClick={() => handleTaskUpdate(todo.id, todo.task)}
+                              className={`text-lg font-medium cursor-pointer transition-colors break-words font-sans flex-1 ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900 hover:text-emerald-600'}`} 
+                              onClick={() => handleToggleTodo(todo.id)}
                             >
                               {todo.task}
                             </span>
+                            <button 
+                              onClick={() => handleTaskUpdate(todo.id, todo.task)}
+                              className="text-gray-400 hover:text-gray-600 p-1"
+                            >
+                              <PencilIcon className="w-4 h-4" />
+                            </button>
                           </div>
-                          <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <div 
-                              className="text-base text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
+                              className="text-sm text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
                               onClick={() => handleMemoUpdate(todo.id, todo.memo)}
                             >
                               {todo.memo ? (
-                                <PencilSquareIcon className="w-5 h-5" />
+                                <PencilSquareIcon className="w-4 h-4" />
                               ) : (
-                                <PencilSquareIcon className="w-5 h-5 opacity-50" />
+                                <PencilSquareIcon className="w-4 h-4 opacity-50" />
                               )}
-                              <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
+                              <span className="text-xs">{todo.memo || 'メモ'}</span>
                             </div>
                             {todo.reason && (
                               <Tooltip text={todo.reason}>
-                                <InformationCircleIcon className="w-5 h-5 text-emerald-400 cursor-pointer" />
+                                <InformationCircleIcon className="w-4 h-4 text-emerald-400 cursor-pointer" />
                               </Tooltip>
                             )}
                             <span className={`px-2 py-0.5 rounded text-xs font-bold ${todo.importance === '高' ? 'bg-red-200 text-red-700' : todo.importance === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{todo.importance}</span>
-                            <button onClick={() => handleDeleteTodo(todo.id)} className="text-red-400 hover:text-red-600">
-                              <TrashIcon className="w-5 h-5" />
+                            <button onClick={() => handleDeleteTodo(todo.id)} className="text-red-300 hover:text-red-500 p-1">
+                              <TrashIcon className="w-4 h-4" />
                             </button>
                           </div>
                         </li>

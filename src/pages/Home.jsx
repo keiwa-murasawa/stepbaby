@@ -35,6 +35,7 @@ function Home() {
     // ローカルストレージにも保存（必要なら）
     localStorage.setItem("nickname", nickname.trim());
     localStorage.setItem("birthDate", date);
+    localStorage.setItem("listId", newListId);
     // /list/:id へ遷移
     navigate(`/list/${newListId}`);
   };
@@ -72,7 +73,9 @@ function Home() {
               />
             </div>
             {error && <div className="text-red-500 text-sm font-bold">{error}</div>}
-            <button type="submit" className="w-full bg-emerald-400 hover:bg-emerald-500 text-white font-bold rounded-xl px-6 py-3 text-lg shadow transition-colors mt-4">はじめる</button>
+            <button type="submit" className="w-full flex justify-center mt-4">
+              <img src="/hajimeru.png" alt="はじめる" className="h-12 object-contain" />
+            </button>
           </form>
         </div>
       </main>
