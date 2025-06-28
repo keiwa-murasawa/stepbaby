@@ -59,7 +59,7 @@ function Home() {
                 value={nickname}
                 onChange={e => setNickname(e.target.value)}
                 className="w-full border-2 border-emerald-200 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-400 text-lg font-sans"
-                placeholder="パパの名前やニックネーム"
+                placeholder="赤ちゃんのニックネーム"
               />
             </div>
             <div>
