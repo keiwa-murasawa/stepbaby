@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
+import todoData from "../data/todoData.json";
 
 function Home() {
   const [nickname, setNickname] = useState("");
@@ -9,7 +10,7 @@ function Home() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!nickname.trim()) {
       setError("ニックネームを入力してください");
@@ -19,62 +20,62 @@ function Home() {
       setError("日付を入力してください");
       return;
     }
-    // 保存
-    localStorage.setItem("nickname", nickname.trim());
-    localStorage.setItem("birthDate", date);
-    setError("");
-    navigate("/todolist");
-  };
-
-  const handleCreateCloudList = async () => {
+    // Firestoreに新しいリストを作成（デフォルトタスクを含める）
     const newListId = crypto.randomUUID();
-    // 必要に応じて初期データをここで定義
     const initialData = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      title: "新しいToDoリスト",
-      todos: []
+      title: `${nickname.trim()}のToDoリスト`,
+      todos: todoData,
+      nickname: nickname.trim(),
+      birthDate: date
     };
     await setDoc(doc(db, "lists", newListId), initialData);
+    setError("");
+    // ローカルストレージにも保存（必要なら）
+    localStorage.setItem("nickname", nickname.trim());
+    localStorage.setItem("birthDate", date);
+    // /list/:id へ遷移
     navigate(`/list/${newListId}`);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-6">
-        <h1 className="text-2xl font-bold text-emerald-700 mb-6 flex items-center gap-2">
-          <span role="img" aria-label="leaf">🌱</span> StepBaby
-        </h1>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="block text-emerald-900 font-semibold mb-1">ニックネーム</label>
-            <input
-              type="text"
-              value={nickname}
-              onChange={e => setNickname(e.target.value)}
-              className="w-full border border-emerald-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-              placeholder="パパの名前やニックネーム"
-            />
+    <div className="min-h-screen bg-emerald-50 flex flex-col items-center">
+      {/* ヘッダー */}
+      <header
+        className="w-full h-40 bg-center bg-no-repeat bg-contain mb-6 bg-white"
+        style={{ backgroundImage: "url('/header-logo.png')" }}
+      ></header>
+      <main className="w-full max-w-4xl px-2 sm:px-4 flex flex-col items-center justify-center flex-1">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+          <div className="flex justify-center mb-6">
+            <img src="/hajimeni.png" alt="はじめに" className="h-16 object-contain" />
           </div>
-          <div>
-            <label className="block text-emerald-900 font-semibold mb-1">出産予定日 または 赤ちゃんの生年月日</label>
-            <input
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              className="w-full border border-emerald-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-            />
-          </div>
-          {error && <div className="text-red-500 text-sm font-bold">{error}</div>}
-          <button type="submit" className="w-full bg-emerald-400 hover:bg-emerald-500 text-white font-bold rounded-md px-4 py-2 transition-colors mt-4">はじめる</button>
-        </form>
-        <button
-          onClick={handleCreateCloudList}
-          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-md px-4 py-3 mt-8 text-lg shadow transition-colors"
-        >
-          新しいクラウドToDoリストを作成（共有URLを発行します）
-        </button>
-      </div>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label className="block text-emerald-900 font-semibold mb-1">ニックネーム</label>
+              <input
+                type="text"
+                value={nickname}
+                onChange={e => setNickname(e.target.value)}
+                className="w-full border-2 border-emerald-200 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-400 text-lg font-sans"
+                placeholder="パパの名前やニックネーム"
+              />
+            </div>
+            <div>
+              <label className="block text-emerald-900 font-semibold mb-1">出産予定日 または 赤ちゃんの生年月日</label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="w-full border-2 border-emerald-200 rounded-lg px-4 py-3 focus:outline-none focus:border-emerald-400 text-lg font-sans"
+              />
+            </div>
+            {error && <div className="text-red-500 text-sm font-bold">{error}</div>}
+            <button type="submit" className="w-full bg-emerald-400 hover:bg-emerald-500 text-white font-bold rounded-xl px-6 py-3 text-lg shadow transition-colors mt-4">はじめる</button>
+          </form>
+        </div>
+      </main>
     </div>
   );
 }

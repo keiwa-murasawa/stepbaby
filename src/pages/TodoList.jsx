@@ -219,12 +219,10 @@ function TodoList() {
   return (
     <div className="min-h-screen bg-emerald-50 flex flex-col items-center">
       {/* ヘッダー */}
-      <header className="w-full bg-stone-500 shadow-sm py-6 mb-6">
-        <div className="max-w-4xl mx-auto flex items-center gap-3 px-4">
-          <img src="/logo192.png" alt="StepBabyロゴ" className="w-10 h-10 rounded-full shadow-md bg-white" />
-          <h1 className="text-3xl font-extrabold text-white tracking-tight font-sans drop-shadow-sm">StepBaby</h1>
-        </div>
-      </header>
+      <header
+        className="w-full h-40 bg-center bg-no-repeat bg-contain mb-6 bg-white"
+        style={{ backgroundImage: "url('/header-logo.png')" }}
+      ></header>
       <main className="w-full max-w-4xl px-2 sm:px-4 flex flex-col gap-8">
         {/* タスク追加フォーム */}
         <form onSubmit={handleAddTask} className="bg-white rounded-2xl shadow-lg p-6 flex flex-col sm:flex-row items-center gap-4 mb-4">

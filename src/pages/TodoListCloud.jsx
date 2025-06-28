@@ -2,12 +2,70 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import { useState as useReactState } from "react";
+import Tooltip from "../components/Tooltip";
+import { PencilSquareIcon, InformationCircleIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import todoData from "../data/todoData.json";
+
+// ステージ判定関数
+function determineStage(dateString) {
+  if (!dateString) return null;
+  const now = new Date();
+  const inputDate = new Date(dateString);
+  const diffTime = now - inputDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  if (diffTime < 0) {
+    const diffWeeks = Math.floor(diffDays / 7);
+    const weeksFromDue = 40 + diffWeeks;
+    if (weeksFromDue < 23) {
+      return "妊娠期前半（妊娠発覚～22週）";
+    } else {
+      return "妊娠期後半（23週～出産）";
+    }
+  } else {
+    if (diffDays <= 30) {
+      return "出産直後（新生児期：〜1ヶ月）";
+    } else if (diffDays <= 90) {
+      return "乳児前期（1〜3ヶ月）";
+    } else if (diffDays <= 180) {
+      return "乳児中期（3〜6ヶ月）";
+    } else if (diffDays <= 270) {
+      return "離乳食準備期（6〜9ヶ月）";
+    } else {
+      return "保育園準備期（9ヶ月〜入園まで）";
+    }
+  }
+}
+
+// カテゴリとグループでToDoを整理する関数
+function groupByCategoryAndGroup(todos) {
+  const grouped = {};
+  todos.forEach(todo => {
+    if (!grouped[todo.category]) {
+      grouped[todo.category] = { single: [], grouped: {} };
+    }
+    if (todo.group) {
+      if (!grouped[todo.category].grouped[todo.group]) {
+        grouped[todo.category].grouped[todo.group] = [];
+      }
+      grouped[todo.category].grouped[todo.group].push(todo);
+    } else {
+      grouped[todo.category].single.push(todo);
+    }
+  });
+  return grouped;
+}
 
 function TodoListCloud() {
   const { id: listId } = useParams();
   const [listData, setListData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newTask, setNewTask] = useState("");
+  const [copied, setCopied] = useReactState(false);
+  const [openCategories, setOpenCategories] = useState({});
+  // ステージ切り替え用
+  const ALL_STAGES = [...new Set(todoData.map(todo => todo.stage))];
+  const [displayedStage, setDisplayedStage] = useState("");
 
   useEffect(() => {
     if (!listId) return;
@@ -23,6 +81,22 @@ function TodoListCloud() {
     });
     return () => unsub();
   }, [listId]);
+
+  // birthDateから現在のステージを判定
+  const currentStage = listData ? determineStage(listData.birthDate) : null;
+  // 初回のみ現在のステージを表示ステージに設定
+  useEffect(() => {
+    if (currentStage && !displayedStage) {
+      setDisplayedStage(currentStage);
+    }
+  }, [currentStage, displayedStage]);
+  // 選択中ステージのタスクのみ抽出
+  const stageTodos = listData && listData.todos ? listData.todos.filter(todo => todo.stage === displayedStage) : [];
+  // カテゴリごとにグループ化
+  const grouped = groupByCategoryAndGroup(stageTodos);
+  const toggleCategory = (category) => {
+    setOpenCategories(prev => ({ ...prev, [category]: !prev[category] }));
+  };
 
   // タスク追加処理
   const handleAddTask = async (e) => {
@@ -84,25 +158,45 @@ function TodoListCloud() {
 
   return (
     <div className="min-h-screen bg-emerald-50 flex flex-col items-center">
-      <header className="w-full bg-stone-500 shadow-sm py-6 mb-6">
-        <div className="max-w-4xl mx-auto flex items-center gap-3 px-4">
-          <h1 className="text-3xl font-extrabold text-white tracking-tight font-sans drop-shadow-sm">StepBaby 共有ToDoリスト</h1>
-        </div>
-      </header>
+      <header
+        className="w-full h-40 bg-center bg-no-repeat bg-contain mb-6 bg-white"
+        style={{ backgroundImage: "url('/header-logo.png')" }}
+      ></header>
       <main className="w-full max-w-4xl px-2 sm:px-4 flex flex-col gap-8">
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
           <div className="text-lg font-bold text-emerald-700 mb-2">{listData.title}</div>
           <div className="text-sm text-gray-500 break-all mb-2">リストID: {listId}</div>
-          <button
-            className="text-emerald-500 underline text-sm"
-            onClick={() => {navigator.clipboard.writeText(window.location.href)}}
-          >
-            このリストのURLをコピー
-          </button>
         </div>
         {/* タスクリスト表示（今は雛形） */}
         <div className="bg-white rounded-xl shadow p-6">
-          <div className="text-emerald-700 font-bold mb-2">タスク一覧</div>
+          {/* ステージ切り替えタブ */}
+          <div className="mb-2">
+            <div className="flex gap-2 border-b-2 border-gray-200 pb-2 mb-2 overflow-x-auto">
+              {ALL_STAGES.map(stageName => (
+                <button 
+                  key={stageName}
+                  onClick={() => setDisplayedStage(stageName)}
+                  className={`px-4 py-2 text-base font-semibold rounded-full transition-colors whitespace-nowrap flex-shrink-0 shadow-sm ${
+                    displayedStage === stageName
+                      ? 'bg-emerald-400 text-white'
+                      : 'bg-gray-100 text-emerald-700 hover:bg-emerald-100'
+                  }`}
+                >
+                  {stageName}
+                  {currentStage === stageName && <span className="text-xs ml-1">(現在)</span>}
+                </button>
+              ))}
+            </div>
+            {displayedStage !== currentStage && (
+              <button
+                onClick={() => setDisplayedStage(currentStage)}
+                className="text-sm text-emerald-600 hover:underline"
+              >
+                現在のステージに戻る
+              </button>
+            )}
+          </div>
+          <div className="text-emerald-700 font-bold mb-2">{displayedStage ? `${displayedStage} のタスク一覧` : 'タスク一覧'}</div>
           <form onSubmit={handleAddTask} className="flex gap-2 mb-4">
             <input
               type="text"
@@ -115,40 +209,106 @@ function TodoListCloud() {
               追加
             </button>
           </form>
-          <ul className="list-disc pl-6">
-            {listData.todos && listData.todos.length > 0 ? (
-              listData.todos.map((todo, idx) => (
-                <li key={todo.id || idx} className="mb-2 flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={todo.done}
-                    onChange={() => handleToggleTodo(todo.id)}
-                    className="w-5 h-5 accent-emerald-400"
-                  />
-                  <span
-                    className={`flex-1 cursor-pointer ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900'}`}
-                    onClick={() => handleEditTodo(todo.id, todo.task)}
-                  >
-                    {todo.task}
-                  </span>
-                  <button
-                    onClick={() => handleEditTodo(todo.id, todo.task)}
-                    className="text-emerald-500 hover:text-emerald-700 text-sm px-2"
-                  >
-                    編集
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTodo(todo.id)}
-                    className="text-red-400 hover:text-red-600 text-sm px-2"
-                  >
-                    削除
-                  </button>
-                </li>
-              ))
+          <section className="flex flex-col gap-6">
+            {Object.keys(grouped).length === 0 ? (
+              <div className="text-emerald-400 text-lg text-center py-8">このステージのToDoはありません</div>
             ) : (
-              <li className="text-gray-400">タスクがありません</li>
+              Object.entries(grouped).map(([category, data]) => (
+                <div key={category} className="mb-6">
+                  <button
+                    className="w-full flex items-center justify-between text-emerald-500 font-bold mb-2 text-lg border-l-4 border-emerald-200 pl-3 pr-2 py-2 bg-white rounded-xl shadow-sm hover:bg-emerald-50 transition-colors"
+                    onClick={() => toggleCategory(category)}
+                    aria-expanded={!!openCategories[category]}
+                  >
+                    <span>{category}</span>
+                    {openCategories[category] ? (
+                      <ChevronUpIcon className="w-6 h-6" />
+                    ) : (
+                      <ChevronDownIcon className="w-6 h-6" />
+                    )}
+                  </button>
+                  {/* アコーディオン展開部分 */}
+                  {openCategories[category] && (
+                    <>
+                      {/* 単体ToDo */}
+                      <ul className="flex flex-col gap-4 mb-4">
+                        {data.single.map(todo => (
+                          <li key={todo.id} className="bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-3 border border-emerald-50">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-6 h-6 accent-emerald-400 flex-shrink-0" />
+                              <span 
+                                className={`text-lg font-medium cursor-pointer transition-colors break-words font-sans ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900 hover:text-emerald-600'}`} 
+                                onClick={() => handleEditTodo(todo.id, todo.task)}
+                              >
+                                {todo.task}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <div 
+                                className="text-base text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
+                                onClick={() => handleEditTodo(todo.id, todo.memo)}
+                              >
+                                <PencilSquareIcon className="w-5 h-5" />
+                                <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
+                              </div>
+                              {todo.reason && (
+                                <Tooltip text={todo.reason}>
+                                  <InformationCircleIcon className="w-5 h-5 text-emerald-400 cursor-pointer" />
+                                </Tooltip>
+                              )}
+                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${todo.importance === '高' ? 'bg-red-200 text-red-700' : todo.importance === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{todo.importance}</span>
+                              <button onClick={() => handleDeleteTodo(todo.id)} className="text-red-400 hover:text-red-600">
+                                <TrashIcon className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                      {/* グループ化されたToDo */}
+                      {Object.entries(data.grouped).map(([groupName, items]) => (
+                        <div key={groupName} className="mb-4">
+                          <div className="font-bold text-emerald-600 mb-2">{groupName}</div>
+                          <ul className="flex flex-col gap-2 pl-4 sm:pl-8">
+                            {items.map(todo => (
+                              <li key={todo.id} className="bg-white rounded-xl shadow flex flex-col sm:flex-row sm:items-center px-4 py-3 gap-3 border border-emerald-50">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  <input type="checkbox" checked={todo.done} onChange={() => handleToggleTodo(todo.id)} className="w-6 h-6 accent-emerald-400 flex-shrink-0" />
+                                  <span 
+                                    className={`text-lg font-medium cursor-pointer transition-colors break-words font-sans ${todo.done ? 'line-through text-gray-400' : 'text-emerald-900 hover:text-emerald-600'}`} 
+                                    onClick={() => handleEditTodo(todo.id, todo.task)}
+                                  >
+                                    {todo.task}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <div 
+                                    className="text-base text-gray-500 cursor-pointer hover:text-gray-800 flex items-center gap-1"
+                                    onClick={() => handleEditTodo(todo.id, todo.memo)}
+                                  >
+                                    <PencilSquareIcon className="w-5 h-5" />
+                                    <span className="hidden sm:inline">{todo.memo || 'メモを追加'}</span>
+                                  </div>
+                                  {todo.reason && (
+                                    <Tooltip text={todo.reason}>
+                                      <InformationCircleIcon className="w-5 h-5 text-emerald-400 cursor-pointer" />
+                                    </Tooltip>
+                                  )}
+                                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${todo.importance === '高' ? 'bg-red-200 text-red-700' : todo.importance === '中' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>{todo.importance}</span>
+                                  <button onClick={() => handleDeleteTodo(todo.id)} className="text-red-400 hover:text-red-600">
+                                    <TrashIcon className="w-5 h-5" />
+                                  </button>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              ))
             )}
-          </ul>
+          </section>
         </div>
       </main>
     </div>
