@@ -74,8 +74,8 @@ function Home() {
                 />
               </div>
               {error && <div className="text-red-500 text-sm font-bold">{error}</div>}
-              <button type="submit" className="w-full flex justify-center mt-4">
-                <img src="/hajimeru.png" alt="はじめる" className="h-12 object-contain" />
+              <button type="submit" className="w-full aspect-[5/1] mt-4 overflow-hidden p-0 bg-transparent rounded-xl flex items-center justify-center">
+                <img src="/hajimeru.png" alt="はじめる" className="w-full h-full object-contain" />
               </button>
             </form>
           </div>

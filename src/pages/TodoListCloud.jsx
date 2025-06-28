@@ -292,7 +292,7 @@ function TodoListCloud() {
         <div className="bg-white rounded-xl shadow p-6 w-full">
           {/* ステージ切り替えタブ */}
           <div className="mb-2 w-full">
-            <div className="flex flex-wrap gap-2 border-b-2 border-gray-200 pb-2 mb-2 w-full">
+            <div className="flex flex-nowrap gap-2 border-b-2 border-gray-200 pb-2 mb-2 w-full overflow-x-auto -mx-2 px-2 sm:flex-wrap sm:overflow-visible sm:mx-0 sm:px-0">
               {ALL_STAGES.map(stageName => (
                 <button 
                   key={stageName}
@@ -318,39 +318,41 @@ function TodoListCloud() {
             )}
           </div>
           <div className="text-emerald-700 font-bold mb-2">{displayedStage ? `${displayedStage} のタスク一覧` : 'タスク一覧'}</div>
-          <form onSubmit={handleAddTask} className="flex gap-2 mb-4">
+          <form onSubmit={handleAddTask} className="flex flex-wrap gap-2 mb-4 w-full max-w-lg mx-auto">
             <input
               type="text"
               value={newTask}
               onChange={e => setNewTask(e.target.value)}
               placeholder="新しいタスクを追加"
-              className="flex-grow border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400"
+              className="w-full md:flex-1 min-w-0 md:min-w-[12rem] md:max-w-[20rem] border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400"
             />
-            <select
-              value={selectedCategory}
-              onChange={e => {
-                setSelectedCategory(e.target.value);
-                setSelectedGroup(""); // カテゴリ変更時にグループをリセット
-              }}
-              className="border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 text-base font-sans"
-            >
-              {availableCategories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <select
-              value={selectedGroup}
-              onChange={e => setSelectedGroup(e.target.value)}
-              className="border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 text-base font-sans"
-            >
-              <option value="">グループなし</option>
-              {filteredGroups.filter(group => group !== "").map(group => (
-                <option key={group} value={group}>{group}</option>
-              ))}
-            </select>
-            <button type="submit" className="bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-emerald-300" disabled={!newTask.trim()}>
-              追加
-            </button>
+            <div className="flex w-full md:w-auto gap-2">
+              <select
+                value={selectedCategory}
+                onChange={e => {
+                  setSelectedCategory(e.target.value);
+                  setSelectedGroup(""); // カテゴリ変更時にグループをリセット
+                }}
+                className="border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 text-base font-sans min-w-[7rem]"
+              >
+                {availableCategories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              <select
+                value={selectedGroup}
+                onChange={e => setSelectedGroup(e.target.value)}
+                className="border-2 border-emerald-200 rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-400 text-base font-sans min-w-[7rem]"
+              >
+                <option value="">グループなし</option>
+                {filteredGroups.filter(group => group !== "").map(group => (
+                  <option key={group} value={group}>{group}</option>
+                ))}
+              </select>
+              <button type="submit" className="bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-emerald-300 min-w-[4rem]" disabled={!newTask.trim()}>
+                追加
+              </button>
+            </div>
           </form>
           <section className="flex flex-col gap-6">
             {Object.keys(grouped).length === 0 ? (
